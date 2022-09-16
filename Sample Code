@@ -1,0 +1,33 @@
+# Import your libraries
+import pandas as pd
+
+# Start writing code
+
+#1. Only 1 table has country info: shopify_users
+#2. Subet for German users
+#3. Join with orders to get germany orders - is this the defintion for a German order (anything requested by a German user? can a user be regsitered to Germany but ordering in Spain)
+#       --> Inner join to combine shopify_user filtered to Germany to shopify_order
+#4. Inner join to map_product_order to get products in Germany
+#5. Ordered list of products from German orders is the most ordered product in Germany
+
+
+german_shopify_users=shopify_users[shopify_users['country']=='Germany']
+#german_shopify_users.head(5)
+#Verified its need, we have 3 countries in the dataset/frame
+shopify_users['country'].unique()
+#Yay! Germany
+#german_shopify_users['country'].unique()
+#german_shopify_users.head(5)
+
+german_order_ids=pd.merge(shopify_orders, german_shopify_users, how='inner', left_on=['user_id'], right_on=['id'])[['order_id', 'user_id','id', 'country' ]]
+german_order_ids.head(10)
+
+german_order_ids_wprods=pd.merge(german_order_ids, map_product_order, how='inner', on=['order_id'])
+german_order_ids_wprods.head(10)
+
+german_product_order_count_agg=german_order_ids_wprods\
+                            .drop_duplicates()\
+                            .groupby(['product_id'], as_index=False)['order_id']\
+                            .count()\
+                            .rename(columns={'order_id': 'order_count'})\
+                            .sort_values(['order_count'], ascending=False)
